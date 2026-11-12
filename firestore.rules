@@ -1,0 +1,167 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidProduct(data, uid) {
+      return data.userId == uid &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 120 &&
+        data.sku is string && data.sku.size() > 0 && data.sku.size() <= 64 &&
+        (!('barcode' in data) || data.barcode == null || (data.barcode is string && data.barcode.size() <= 64)) &&
+        (!('category' in data) || data.category == null || (data.category is string && data.category.size() <= 64)) &&
+        data.costPrice is number && data.costPrice >= 0 &&
+        data.sellingPrice is number && data.sellingPrice >= 0 &&
+        data.currentStock is int && data.currentStock >= 0 &&
+        data.minStockThreshold is int && data.minStockThreshold >= 0 &&
+        (!('reorderQuantity' in data) || data.reorderQuantity == null || (data.reorderQuantity is int && data.reorderQuantity >= 0)) &&
+        (!('supplierName' in data) || data.supplierName == null || (data.supplierName is string && data.supplierName.size() <= 120)) &&
+        (!('supplierContact' in data) || data.supplierContact == null || (data.supplierContact is string && data.supplierContact.size() <= 120)) &&
+        (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 500)) &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidCustomer(data, uid) {
+      return data.userId == uid &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 120 &&
+        (!('company' in data) || data.company == null || (data.company is string && data.company.size() <= 120)) &&
+        (!('email' in data) || data.email == null || (data.email is string && data.email.size() <= 120)) &&
+        (!('phone' in data) || data.phone == null || (data.phone is string && data.phone.size() <= 50)) &&
+        (!('address' in data) || data.address == null || (data.address is string && data.address.size() <= 250)) &&
+        data.creditLimit is number && data.creditLimit >= 0 &&
+        data.currentBalance is number &&
+        (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 500)) &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidInvoice(data, uid) {
+      return data.userId == uid &&
+        data.invoiceNumber is string && data.invoiceNumber.size() > 0 && data.invoiceNumber.size() <= 64 &&
+        data.customerId is string && data.customerId.size() > 0 && data.customerId.size() <= 128 &&
+        data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 120 &&
+        data.items is list && data.items.size() <= 100 &&
+        data.totalAmount is number && data.totalAmount >= 0 &&
+        (!('subtotal' in data) || data.subtotal == null || data.subtotal is number) &&
+        (!('taxAmount' in data) || data.taxAmount == null || data.taxAmount is number) &&
+        (!('discountAmount' in data) || data.discountAmount == null || data.discountAmount is number) &&
+        (!('amountPaid' in data) || data.amountPaid == null || data.amountPaid is number) &&
+        (!('balanceDue' in data) || data.balanceDue == null || data.balanceDue is number) &&
+        data.status is string && data.status in ['UNPAID', 'PARTIALLY_PAID', 'PAID', 'CANCELLED'] &&
+        (!('issueDate' in data) || data.issueDate == null || (data.issueDate is string && data.issueDate.size() <= 32)) &&
+        (!('dueDate' in data) || data.dueDate == null || (data.dueDate is string && data.dueDate.size() <= 32)) &&
+        (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 500)) &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidPayment(data, uid) {
+      return data.userId == uid &&
+        data.customerId is string && data.customerId.size() > 0 && data.customerId.size() <= 128 &&
+        (!('customerName' in data) || data.customerName == null || (data.customerName is string && data.customerName.size() <= 120)) &&
+        (!('invoiceId' in data) || data.invoiceId == null || (data.invoiceId is string && data.invoiceId.size() <= 128)) &&
+        data.amount is number && data.amount > 0 &&
+        data.paymentMethod is string && data.paymentMethod.size() > 0 && data.paymentMethod.size() <= 64 &&
+        (!('referenceNote' in data) || data.referenceNote == null || (data.referenceNote is string && data.referenceNote.size() <= 200)) &&
+        (!('paymentDate' in data) || data.paymentDate == null || (data.paymentDate is string && data.paymentDate.size() <= 32)) &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidReorder(data, uid) {
+      return data.userId == uid &&
+        data.orderNumber is string && data.orderNumber.size() > 0 && data.orderNumber.size() <= 64 &&
+        data.productId is string && data.productId.size() > 0 && data.productId.size() <= 128 &&
+        data.productName is string && data.productName.size() > 0 && data.productName.size() <= 120 &&
+        (!('supplierName' in data) || data.supplierName == null || (data.supplierName is string && data.supplierName.size() <= 120)) &&
+        data.quantity is int && data.quantity > 0 &&
+        (!('unitCost' in data) || data.unitCost == null || data.unitCost is number) &&
+        (!('totalCost' in data) || data.totalCost == null || data.totalCost is number) &&
+        data.status is string && data.status in ['DRAFT', 'ORDERED', 'RECEIVED', 'CANCELLED'] &&
+        (!('orderDate' in data) || data.orderDate == null || (data.orderDate is string && data.orderDate.size() <= 32)) &&
+        (!('expectedDate' in data) || data.expectedDate == null || (data.expectedDate is string && data.expectedDate.size() <= 32)) &&
+        (!('receivedDate' in data) || data.receivedDate == null || (data.receivedDate is string && data.receivedDate.size() <= 32)) &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    match /users/{userId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+      match /products/{productId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(productId) &&
+                         isValidProduct(incoming(), userId);
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(productId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidProduct(incoming(), userId);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /customers/{customerId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(customerId) &&
+                         isValidCustomer(incoming(), userId);
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(customerId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidCustomer(incoming(), userId);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /invoices/{invoiceId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(invoiceId) &&
+                         isValidInvoice(incoming(), userId);
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(invoiceId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidInvoice(incoming(), userId);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /payments/{paymentId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(paymentId) &&
+                         isValidPayment(incoming(), userId);
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(paymentId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidPayment(incoming(), userId);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /reorders/{reorderId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(reorderId) &&
+                         isValidReorder(incoming(), userId);
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(reorderId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidReorder(incoming(), userId);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+  }
+}

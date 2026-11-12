@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Inventory product item with stock tracking and reorder thresholds",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "barcode": { "type": "string" },
+        "category": { "type": "string" },
+        "costPrice": { "type": "number" },
+        "sellingPrice": { "type": "number" },
+        "currentStock": { "type": "integer" },
+        "minStockThreshold": { "type": "integer" },
+        "reorderQuantity": { "type": "integer" },
+        "supplierName": { "type": "string" },
+        "supplierContact": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "sku", "costPrice", "sellingPrice", "currentStock", "minStockThreshold", "createdAt"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Client account with credit limit and balance tracking",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "company": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "creditLimit": { "type": "number" },
+        "currentBalance": { "type": "number" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "creditLimit", "currentBalance", "createdAt"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Sales bill or invoice issued to a client",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "taxAmount": { "type": "number" },
+        "discountAmount": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "amountPaid": { "type": "number" },
+        "balanceDue": { "type": "number" },
+        "status": { "type": "string", "enum": ["UNPAID", "PARTIALLY_PAID", "PAID", "CANCELLED"] },
+        "issueDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "invoiceNumber", "customerId", "customerName", "totalAmount", "status", "createdAt"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Customer payment record against credit or invoice",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "invoiceId": { "type": "string" },
+        "amount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "referenceNote": { "type": "string" },
+        "paymentDate": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "customerId", "amount", "paymentMethod", "createdAt"]
+    },
+    "Reorder": {
+      "title": "Reorder",
+      "description": "Automated inventory purchase / restock order",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "orderNumber": { "type": "string" },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "supplierName": { "type": "string" },
+        "quantity": { "type": "integer" },
+        "unitCost": { "type": "number" },
+        "totalCost": { "type": "number" },
+        "status": { "type": "string", "enum": ["DRAFT", "ORDERED", "RECEIVED", "CANCELLED"] },
+        "orderDate": { "type": "string" },
+        "expectedDate": { "type": "string" },
+        "receivedDate": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "orderNumber", "productId", "productName", "quantity", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Products catalog and stock data scoped to user"
+    },
+    "/users/{userId}/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/Customer" },
+      "description": "Client directory and credit limits scoped to user"
+    },
+    "/users/{userId}/invoices/{invoiceId}": {
+      "schema": { "$ref": "#/entities/Invoice" },
+      "description": "Sales bills and invoices scoped to user"
+    },
+    "/users/{userId}/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/Payment" },
+      "description": "Client payment transactions scoped to user"
+    },
+    "/users/{userId}/reorders/{reorderId}": {
+      "schema": { "$ref": "#/entities/Reorder" },
+      "description": "Automated inventory purchase and restock orders"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "StockLedger",
+  "description": "Business inventory tracking, automated reordering, client billing & invoicing, QR code scanning, and customer credit ledger.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
